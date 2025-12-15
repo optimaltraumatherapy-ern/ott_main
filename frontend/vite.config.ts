@@ -6,11 +6,11 @@ export default defineConfig({
   server: {
     host: true,
     port: 3000,
-    proxy: {
-      "/api": {
-        target: "http://localhost:3001",
-        changeOrigin: true
-      }
-    }
-  }
+    strictPort: true,
+
+    // ✅ Allow Replit preview host (fixes "Blocked request. This host is not allowed.")
+    allowedHosts: [
+      "d7fcc3eb-22e5-4041-959c-b072044efd16-00-1lobmk1nzsxs3.janeway.replit.dev",
+    ],
+  },
 });

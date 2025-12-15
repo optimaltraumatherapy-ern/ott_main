@@ -1,6 +1,6 @@
 import React from "react";
 
-export function Therapists() {
+export function AboutTherapists() {
   return (
     <div className="card">
       <h1>About Our Therapists</h1>

@@ -1,6 +1,6 @@
 import React from "react";
 
-export function Process() {
+export function OurProcess() {
   return (
     <div className="card">
       <h1>Our Process</h1>

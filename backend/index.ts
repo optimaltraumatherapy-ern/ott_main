@@ -1,18 +1,33 @@
-import express from 'express';
+import { env } from "./env.js";
+import { createApp } from "./server.js";
 
-const app = express();
-const PORT = 5000;
-
-app.use(express.json());
-
-app.get('/', (req, res) => {
-  res.json({ message: 'Welcome to the API' });
+// Make thrown objects actually visible (fixes your current “null prototype” mystery)
+process.on("uncaughtException", (err) => {
+  console.error("[backend] uncaughtException:", err);
+  try {
+    console.error("[backend] uncaughtException JSON:", JSON.stringify(err));
+  } catch {}
+  process.exit(1);
 });
 
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
+process.on("unhandledRejection", (reason) => {
+  console.error("[backend] unhandledRejection:", reason);
+  try {
+    console.error("[backend] unhandledRejection JSON:", JSON.stringify(reason));
+  } catch {}
+  process.exit(1);
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on http://0.0.0.0:${PORT}`);
+async function main() {
+  const app = createApp();
+
+  // Replit-friendly: listen on all interfaces
+  app.listen(env.BACKEND_PORT, "0.0.0.0", () => {
+    console.log(`[backend] listening on http://localhost:${env.BACKEND_PORT}`);
+  });
+}
+
+main().catch((err) => {
+  console.error("[backend] fatal:", err);
+  process.exit(1);
 });

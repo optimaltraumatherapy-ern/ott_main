@@ -1,22 +1,20 @@
 {
-  "name": "workspace",
-  "version": "1.0.0",
-  "main": "index.js",
-  "type": "module",
+  "name": "ott_main",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
   "scripts": {
-    "dev": "node --loader ts-node/esm backend/index.ts",
-    "start": "node --loader ts-node/esm backend/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "concurrently -n backend,frontend -c auto \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "dev:backend": "npm run dev -w backend",
+    "dev:frontend": "npm run dev -w frontend",
+    "build": "npm run build -w backend && npm run build -w frontend"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "@types/express": "^5.0.6",
-    "@types/node": "^25.0.2",
-    "express": "^5.2.1",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

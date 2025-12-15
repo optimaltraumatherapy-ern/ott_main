@@ -1,4 +1,5 @@
 modules = ["nodejs-20"]
+
 [agent]
 expertMode = true
 
@@ -6,19 +7,10 @@ expertMode = true
 channel = "stable-25_05"
 
 [workflows]
-runButton = "Project"
+runButton = "Dev"
 
 [[workflows.workflow]]
-name = "Project"
-mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Server"
-
-[[workflows.workflow]]
-name = "Server"
+name = "Dev"
 author = "agent"
 
 [[workflows.workflow.tasks]]
@@ -30,9 +22,17 @@ waitForPort = 5000
 outputType = "webview"
 
 [[ports]]
+localPort = 3000
+externalPort = 3000
+
+[[ports]]
 localPort = 5000
 externalPort = 80
 
+[[ports]]
+localPort = 8080
+externalPort = 8080
+
 [deployment]
 deploymentTarget = "autoscale"
-run = ["node", "--loader", "ts-node/esm", "backend/index.ts"]
+run = ["bash", "-lc", "npm run start"]

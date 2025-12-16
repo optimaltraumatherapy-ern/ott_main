@@ -27,27 +27,52 @@ export function Contact() {
     }
   }
 
-  return (
-    <div className="card">
-      <h1>Contact</h1>
-      <p><small>This form writes to a secure DB table (later: email notifications via Resend, but avoid PHI in email).</small></p>
+return (
+  <section className="page">
+    <div className="container">
+      <div className="grid grid-2" style={{ alignItems: "start" }}>
+        <div className="stack">
+          <h1>Contact</h1>
+          <p className="muted">
+            Placeholder form — we’ll connect this to your backend/email flow later (Resend, etc.).
+          </p>
 
-      <form onSubmit={submit}>
-        <label>Name</label>
-        <input value={name} onChange={(e) => setName(e.target.value)} required />
-
-        <label>Email</label>
-        <input value={email} onChange={(e) => setEmail(e.target.value)} required type="email" />
-
-        <label>Message</label>
-        <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={6} required />
-
-        <div style={{ marginTop: 12, display: "flex", gap: 10, alignItems: "center" }}>
-          <button disabled={status === "sending"}>Send</button>
-          {status === "sent" && <span>✅ Sent</span>}
-          {status === "error" && <span>❌ Failed</span>}
+          <div className="callout">
+            <strong>You’re in control</strong>
+            <p className="muted" style={{ marginTop: 8 }}>
+              Share only what you’re comfortable sharing. We’ll keep the next steps clear and supportive.
+            </p>
+          </div>
         </div>
-      </form>
+
+        <div className="card">
+          <form className="form">
+            <label className="label">
+              Name
+              <input className="input" placeholder="Your name" />
+            </label>
+
+            <label className="label">
+              Email
+              <input className="input" placeholder="you@example.com" />
+            </label>
+
+            <label className="label">
+              Message
+              <textarea className="textarea" placeholder="How can we help?" />
+            </label>
+
+            <button className="btn btn--primary" type="button">
+              Send Message
+            </button>
+
+            <small className="muted">
+              (This button is not wired yet — we’ll connect it once backend email is ready.)
+            </small>
+          </form>
+        </div>
+      </div>
     </div>
-  );
+  </section>
+);
 }

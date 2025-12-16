@@ -1,0 +1,44 @@
+.form {
+  display: grid;
+  gap: var(--s4);
+}
+
+.field {
+  display: grid;
+  gap: var(--s2);
+}
+
+.label {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.input,
+.textarea,
+.select {
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(108, 95, 134, 0.25);
+  background: rgba(255, 253, 249, 0.85);
+  color: var(--text);
+}
+
+.textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.formActions {
+  display: flex;
+  gap: var(--s3);
+  flex-wrap: wrap;
+  margin-top: var(--s2);
+}

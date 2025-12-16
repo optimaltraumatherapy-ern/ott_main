@@ -1,0 +1,110 @@
+:root {
+  /* Brand palette sampled from logo */
+  --bg: #fcf5eb;           /* warm cream */
+  --surface: #fffdf9;      /* warm white */
+  --surface-2: #f7f0e6;    /* gentle panel */
+  --text: #2b282e;         /* near-black */
+  --muted: #5f5966;        /* soft gray */
+
+  --primary: #6c5f86;      /* deep purple */
+  --primary-700: #5b4f72;  /* darker purple */
+  --secondary: #a19eb8;    /* lavender-gray */
+  --accent: #edd4a1;       /* warm gold */
+  --accent-2: #dcc4c2;     /* blush */
+
+  --border: rgba(108, 95, 134, 0.18);
+
+  --shadow-sm: 0 6px 16px rgba(43, 40, 46, 0.08);
+  --shadow: 0 14px 34px rgba(43, 40, 46, 0.10);
+
+  --radius-sm: 10px;
+  --radius: 14px;
+
+  --container: 1120px;
+
+  /* Spacing scale */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --s7: 48px;
+
+  /* Typography */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial,
+    "Apple Color Emoji", "Segoe UI Emoji";
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+
+  /* Focus */
+  --focus-ring: 0 0 0 4px rgba(237, 212, 161, 0.55);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+
+  /* Warm, welcoming background */
+  background:
+    radial-gradient(1200px 700px at 20% 0%, rgba(220, 196, 194, 0.30), transparent 55%),
+    radial-gradient(1000px 600px at 85% 10%, rgba(161, 158, 184, 0.24), transparent 55%),
+    var(--bg);
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--primary-700);
+  text-decoration: underline;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-serif);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin: 0 0 var(--s3);
+}
+
+h1 {
+  font-size: clamp(2rem, 3.5vw, 3rem);
+}
+h2 {
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+}
+p {
+  margin: 0 0 var(--s3);
+  color: var(--text);
+}
+small, .muted {
+  color: var(--muted);
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: 10px;
+}

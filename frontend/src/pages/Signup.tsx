@@ -1,41 +1,34 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabaseClient";
+import { Link } from "react-router-dom";
 
 export function Signup() {
-  const nav = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [status, setStatus] = useState<string | null>(null);
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setStatus("Creating account...");
-
-    const { error } = await supabase.auth.signUp({ email, password });
-    if (error) {
-      setStatus(error.message);
-      return;
-    }
-
-    setStatus("Account created. You can log in now.");
-    nav("/login");
-  }
-
   return (
-    <div>
-      <h1>Sign Up</h1>
-      <form onSubmit={submit} style={{ display: "grid", gap: 8, maxWidth: 420 }}>
-        <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <input
-          placeholder="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button type="submit">Create account</button>
-      </form>
-      {status ? <p>{status}</p> : null}
-    </div>
+    <section className="page">
+      <div className="container" style={{ maxWidth: 520 }}>
+        <div className="card stack">
+          <h1>Create your account</h1>
+          <p className="muted">Placeholder — we’ll connect this to Supabase auth next.</p>
+
+          <form className="form">
+            <label className="label">
+              Email
+              <input className="input" placeholder="you@example.com" />
+            </label>
+
+            <label className="label">
+              Password
+              <input className="input" type="password" placeholder="Create a password" />
+            </label>
+
+            <button className="btn btn--primary" type="button">
+              Sign Up
+            </button>
+          </form>
+
+          <p className="muted">
+            Already have an account? <Link to="/login">Login</Link>
+          </p>
+        </div>
+      </div>
+    </section>
   );
 }

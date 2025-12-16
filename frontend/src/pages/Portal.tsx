@@ -20,25 +20,33 @@ export function Portal() {
     await supabase.auth.signOut();
   }
 
-  return (
-    <div>
-      <h1>Client Portal (Placeholder)</h1>
-      <p>Signed in as: {email ?? "(not signed in)"}</p>
+ return (
+    <section className="page">
+      <div className="container stack">
+        <h1>Client Portal</h1>
+        <p className="muted">
+          Placeholder dashboard — later this will show intake forms, assessments, scheduling, documents,
+          and “My Plan.”
+        </p>
 
-      <div style={{ display: "grid", gap: 8, maxWidth: 720 }}>
-        <button onClick={signOut} disabled={!email}>
-          Sign out
-        </button>
-
-        <h2>Next features we’ll wire up</h2>
-        <ul>
-          <li>Intake forms + assessments</li>
-          <li>Insurance uploads</li>
-          <li>Consultation scheduling</li>
-          <li>My Plan (therapist-authored)</li>
-          <li>Session notes + file sharing (therapist → client)</li>
-        </ul>
+        <div className="grid grid-3">
+          <div className="card">
+            <h3>Intake Forms</h3>
+            <p className="muted">Complete your intake forms (coming soon).</p>
+            <button className="btn btn--secondary" type="button">Open</button>
+          </div>
+          <div className="card">
+            <h3>Schedule</h3>
+            <p className="muted">Book a consultation or session (coming soon).</p>
+            <button className="btn btn--secondary" type="button">View</button>
+          </div>
+          <div className="card">
+            <h3>My Plan</h3>
+            <p className="muted">Your therapist-created plan will appear here.</p>
+            <button className="btn btn--secondary" type="button">Open</button>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

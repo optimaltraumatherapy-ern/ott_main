@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
+import { Link } from "react-router-dom";
 
 export function Login() {
   const nav = useNavigate();
@@ -22,20 +23,34 @@ export function Login() {
     nav("/portal");
   }
 
-  return (
-    <div>
-      <h1>Login</h1>
-      <form onSubmit={submit} style={{ display: "grid", gap: 8, maxWidth: 420 }}>
-        <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <input
-          placeholder="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button type="submit">Login</button>
-      </form>
-      {status ? <p>{status}</p> : null}
-    </div>
+return (
+    <section className="page">
+      <div className="container" style={{ maxWidth: 520 }}>
+        <div className="card stack">
+          <h1>Login</h1>
+          <p className="muted">Placeholder — we’ll connect this to Supabase auth next.</p>
+
+          <form className="form">
+            <label className="label">
+              Email
+              <input className="input" placeholder="you@example.com" />
+            </label>
+
+            <label className="label">
+              Password
+              <input className="input" type="password" placeholder="••••••••" />
+            </label>
+
+            <button className="btn btn--primary" type="button">
+              Login
+            </button>
+          </form>
+
+          <p className="muted">
+            Don’t have an account? <Link to="/signup">Sign up</Link>
+          </p>
+        </div>
+      </div>
+    </section>
   );
 }

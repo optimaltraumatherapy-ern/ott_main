@@ -1,7 +1,8 @@
+/* NOTE: With main.tsx importing the partials directly, this file is optional. */
+
 @import "./tokens.css";
 @import "./base.css";
 @import "./layouts.css";
 @import "./components.css";
 @import "./forms.css";
-/* Optional utilities last */
 @import "./utilities.css";

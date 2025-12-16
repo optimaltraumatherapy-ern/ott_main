@@ -19,6 +19,7 @@
 
   --radius-sm: 10px;
   --radius: 14px;
+  --radius-lg: 18px;
 
   --container: 1120px;
 
@@ -30,6 +31,7 @@
   --s5: 24px;
   --s6: 32px;
   --s7: 48px;
+  --s8: 72px;
 
   /* Typography */
   --font-sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial,
@@ -38,46 +40,96 @@
 
   /* Focus */
   --focus-ring: 0 0 0 4px rgba(237, 212, 161, 0.55);
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-fast: 140ms;
+  --dur: 200ms;
 }
 
 *,
 *::before,
-*::after { box-sizing: border-box; }
+*::after {
+  box-sizing: border-box;
+}
 
-html, body { height: 100%; }
+html,
+body {
+  height: 100%;
+}
 
 body {
   margin: 0;
   color: var(--text);
   font-family: var(--font-sans);
-  line-height: 1.5;
+  line-height: 1.55;
 
-  /* Clean, warm background — removed right-side blob entirely */
-  background: var(--bg);
+  /* Warm, welcoming background */
+  background:
+    radial-gradient(1200px 700px at 20% 0%, rgba(220, 196, 194, 0.30), transparent 55%),
+    radial-gradient(1000px 600px at 85% 10%, rgba(161, 158, 184, 0.24), transparent 55%),
+    var(--bg);
 
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-img { max-width: 100%; height: auto; display: block; }
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
 
-a { color: var(--primary); text-decoration: none; }
-a:hover { color: var(--primary-700); text-decoration: underline; }
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--primary-700);
+  text-decoration: underline;
+}
 
 h1, h2, h3 {
   font-family: var(--font-serif);
-  line-height: 1.15;
+  line-height: 1.12;
   letter-spacing: -0.01em;
   margin: 0 0 var(--s3);
 }
 
-h1 { font-size: clamp(2rem, 3.5vw, 3rem); }
-h2 { font-size: clamp(1.5rem, 2.4vw, 2rem); }
-p { margin: 0 0 var(--s3); color: var(--text); }
-small, .muted { color: var(--muted); }
+h1 {
+  font-size: clamp(2rem, 3.6vw, 3.1rem);
+}
+h2 {
+  font-size: clamp(1.45rem, 2.4vw, 2.05rem);
+}
+h3 {
+  font-size: 1.15rem;
+}
+
+p {
+  margin: 0 0 var(--s3);
+  color: var(--text);
+}
+
+small,
+.muted {
+  color: var(--muted);
+}
+
+::selection {
+  background: rgba(237, 212, 161, 0.55);
+}
 
 :focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
   border-radius: 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    scroll-behavior: auto !important;
+    animation: none !important;
+  }
 }

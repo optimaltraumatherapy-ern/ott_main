@@ -8,6 +8,7 @@ import { Signup } from "./pages/Signup";
 import { Portal } from "./pages/Portal";
 import { SiteHeader } from "./components/SiteHeader";
 import { SiteFooter } from "./components/SiteFooter";
+import { Dashboard } from "./pages/app/Dashboard";
 
 export function App() {
   return (
@@ -24,7 +25,12 @@ export function App() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+
+              {/* Client portal */}
               <Route path="/portal" element={<Portal />} />
+
+              {/* Staff app (admin/therapist) */}
+              <Route path="/app/*" element={<Dashboard />} />
             </Routes>
           </div>
         </main>

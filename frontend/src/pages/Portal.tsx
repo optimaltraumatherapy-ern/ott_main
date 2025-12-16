@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabaseClient";
 
 export function Portal() {
   const [email, setEmail] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -17,34 +18,57 @@ export function Portal() {
   }, []);
 
   async function signOut() {
+    setBusy(true);
     await supabase.auth.signOut();
+    setBusy(false);
   }
 
- return (
-    <section className="page">
-      <div className="container stack">
-        <h1>Client Portal</h1>
-        <p className="muted">
-          Placeholder dashboard — later this will show intake forms, assessments, scheduling, documents,
-          and “My Plan.”
-        </p>
+  return (
+    <section className="section">
+      <div className="container">
+        <header className="card" aria-labelledby="portal-heading">
+          <h1 id="portal-heading">Client Portal</h1>
+          <p className="muted">
+            Placeholder dashboard — later this will show intake forms, assessments, scheduling,
+            documents, and “My Plan.”
+          </p>
 
-        <div className="grid grid-3">
-          <div className="card">
-            <h3>Intake Forms</h3>
+          <div className="formActions" style={{ marginTop: 8 }}>
+            <small className="muted">
+              {email ? `Signed in as ${email}` : "Not signed in"}
+            </small>
+            {email && (
+              <button className="button button--ghost" onClick={signOut} disabled={busy}>
+                {busy ? "Signing out…" : "Sign out"}
+              </button>
+            )}
+          </div>
+        </header>
+
+        <div className="cardGrid" style={{ marginTop: 24 }}>
+          <section className="card" aria-labelledby="intake-title">
+            <h3 id="intake-title">Intake Forms</h3>
             <p className="muted">Complete your intake forms (coming soon).</p>
-            <button className="btn btn--secondary" type="button">Open</button>
-          </div>
-          <div className="card">
-            <h3>Schedule</h3>
+            <div className="formActions">
+              <button className="button button--ghost" type="button">Open</button>
+            </div>
+          </section>
+
+          <section className="card" aria-labelledby="schedule-title">
+            <h3 id="schedule-title">Schedule</h3>
             <p className="muted">Book a consultation or session (coming soon).</p>
-            <button className="btn btn--secondary" type="button">View</button>
-          </div>
-          <div className="card">
-            <h3>My Plan</h3>
-            <p className="muted">Your therapist-created plan will appear here.</p>
-            <button className="btn btn--secondary" type="button">Open</button>
-          </div>
+            <div className="formActions">
+              <button className="button button--ghost" type="button">View</button>
+            </div>
+          </section>
+
+          <section className="card" aria-labelledby="plan-title">
+            <h3 id="plan-title">My Plan</h3>
+            <p className="muted">Your therapist‑created plan will appear here.</p>
+            <div className="formActions">
+              <button className="button button--ghost" type="button">Open</button>
+            </div>
+          </section>
         </div>
       </div>
     </section>

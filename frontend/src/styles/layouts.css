@@ -1,65 +1,190 @@
 /* ================
    Layout primitives
    ================ */
-.appShell {
+
+.ott-container {
+  width: min(1100px, calc(100% - 2rem));
+  margin-inline: auto;
+}
+
+.ott-section {
+  padding-block: var(--ott-space-12);
+}
+
+.ott-surface {
+  background: var(--ott-color-surface);
+  border: 1px solid var(--ott-color-border);
+  border-radius: var(--ott-radius-lg);
+  box-shadow: var(--ott-shadow-sm);
+}
+
+.ott-page {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-.appMain,
-.main {
+.ott-main {
   flex: 1;
-  display: block;
-  padding-block: var(--s8);
-  /* center-align page content by default */
-  text-align: center;
+  padding-block: var(--ott-space-10);
 }
 
-/* Section wrapper with optional surface card */
-.section {
-  padding-block: var(--s9);
-}
-.section.is-card {
-  background: transparent;
-}
-.sectionCard {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
-  padding: clamp(1rem, 2.5vw, 1.75rem);
-  max-width: 1000px;
-  margin-inline: auto;
+/* ================
+   Marketing layout
+   ================ */
+
+.ott-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(248, 241, 232, 0.85);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(111, 99, 138, 0.12);
 }
 
-/* Marketing hero */
-.ott-hero { padding: var(--s9) 0; }
+.ott-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ott-space-4);
+  padding: var(--ott-space-4) 0;
+}
+
+.ott-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ott-space-3);
+}
+
+.ott-brand__logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  box-shadow: 0 6px 18px rgba(111, 99, 138, 0.18);
+}
+
+.ott-brand__name {
+  font-family: var(--ott-font-serif);
+  font-size: 1.1rem;
+  letter-spacing: 0.3px;
+  color: var(--ott-color-text);
+}
+
+.ott-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--ott-space-3);
+  flex-wrap: wrap;
+}
+
+.ott-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--ott-color-text-muted);
+}
+.ott-nav a:hover {
+  background: rgba(111, 99, 138, 0.08);
+  color: var(--ott-color-text);
+  text-decoration: none;
+}
+
+.ott-footer {
+  padding: var(--ott-space-10) 0;
+  border-top: 1px solid rgba(111, 99, 138, 0.12);
+  color: var(--ott-color-text-muted);
+}
+
+/* Hero block */
+.ott-hero { padding: var(--ott-space-12) 0; }
+
+.ott-hero__panel {
+  /* Removed decorative hero blobs – clean, neutral panel */
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border-radius: var(--ott-radius-xl);
+  border: 1px solid var(--ott-color-border);
+  background: var(--ott-color-surface);
+  box-shadow: var(--ott-shadow-md);
+}
+
 .ott-hero__grid {
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
-  gap: var(--s7);
+  gap: var(--ott-space-8);
   align-items: center;
 }
-@media (max-width: 900px) {
-  .ott-hero__grid { grid-template-columns: 1fr; }
+
+.ott-hero__copy { max-width: 60ch; }
+
+.ott-hero__art {
+  display: grid;
+  place-items: center;
 }
 
-/* App shell layout (optional sidebars) */
+.ott-hero__logo {
+  width: min(360px, 70%);
+  height: auto;
+  filter: drop-shadow(0 10px 24px rgba(16, 24, 40, 0.12));
+}
+
+/* Stack to single column on small screens */
+@media (max-width: 900px) {
+  .ott-hero__grid { grid-template-columns: 1fr; }
+  .ott-hero__art { order: -1; margin-bottom: var(--ott-space-6); }
+}
+
+/* Carded section layout */
+.ott-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--ott-space-8);
+}
+@media (min-width: 900px) {
+  .ott-grid-2 { grid-template-columns: 1fr 1fr; }
+}
+
+.ott-card {
+  padding: var(--ott-space-6);
+  border-radius: var(--ott-radius-lg);
+  border: 1px solid var(--ott-color-border);
+  background: var(--ott-color-surface);
+  box-shadow: var(--ott-shadow-sm);
+}
+.ott-card__header { margin-bottom: var(--ott-space-3); }
+
+/* ================
+   App shell layout
+   ================ */
+
 .ott-appShell {
   min-height: 100vh;
   display: grid;
   grid-template-columns: 280px 1fr;
 }
+
 @media (max-width: 960px) {
   .ott-appShell { grid-template-columns: 1fr; }
 }
+
 .ott-sidebar {
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  padding: var(--s7);
+  background: var(--ott-color-surface);
+  border-right: 1px solid rgba(111, 99, 138, 0.12);
+  padding: var(--ott-space-6);
 }
-.ott-content { padding: var(--s8); }
+
+.ott-sidebar__title {
+  font-family: var(--ott-font-serif);
+  margin-bottom: var(--ott-space-4);
+}
+
+.ott-content { padding: var(--ott-space-8); }
+
 @media (max-width: 960px) {
-  .ott-sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+  .ott-sidebar {
+    border-right: none;
+    border-bottom: 1px solid rgba(111, 99, 138, 0.12);
+  }
 }

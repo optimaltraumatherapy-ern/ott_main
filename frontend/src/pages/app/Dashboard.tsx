@@ -2,9 +2,7 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../context/AuthContext";
 import { formatDateTime } from "../../lib/time";
-import { useUserRole } from "../../hooks/useUserRole";
 import { TherapistCalendar } from "./TherapistCalendar";
-import { TherapistScheduleSettings } from "./TherapistScheduleSettings";
 
 type Appointment = {
   id: string;
@@ -36,9 +34,7 @@ export function ClientDashboard() {
   return (
     <div className="card">
       <h3>Welcome</h3>
-      <p>
-        Use the navigation to complete intake, upload insurance, and schedule your consultation.
-      </p>
+      <p>Use the navigation to complete intake, upload insurance, and schedule your consultation.</p>
 
       <h4>Upcoming appointments</h4>
       {appts.length === 0 ? (
@@ -49,8 +45,7 @@ export function ClientDashboard() {
         <ul>
           {appts.map((a) => (
             <li key={a.id}>
-              {formatDateTime(a.start_time)} — {a.kind}{" "}
-              <span className="badge">{a.status}</span>
+              {formatDateTime(a.start_time)} — {a.kind} <span className="badge">{a.status}</span>
             </li>
           ))}
         </ul>
@@ -59,59 +54,47 @@ export function ClientDashboard() {
   );
 }
 
-function TherapistOrAdminDashboard({ isAdmin }: { isAdmin: boolean }) {
-  const [tab, setTab] = useState<"calendar" | "settings">("calendar");
-
-  return (
-    <div style={{ display: "grid", gap: 16 }}>
-      <div className="card">
-        <h3>{isAdmin ? "Admin Scheduling" : "Therapist Scheduling"}</h3>
-        <p style={{ marginTop: 6 }}>
-          <small>
-            Calendar shows appointments, reserved slots, room blocks, and group sessions. Other
-            therapists’ events appear as “Busy”.
-          </small>
-        </p>
-
-        <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-          <button onClick={() => setTab("calendar")} disabled={tab === "calendar"}>
-            Calendar
-          </button>
-          <button onClick={() => setTab("settings")} disabled={tab === "settings"}>
-            Schedule Settings
-          </button>
-        </div>
-      </div>
-
-      {tab === "calendar" ? (
-        <TherapistCalendar />
-      ) : (
-        <TherapistScheduleSettings />
-      )}
-    </div>
-  );
-}
-
 /**
- * Main dashboard export:
- * - clients get the client dashboard
- * - therapists/admins get calendar + settings
+ * App dashboard router:
+ * - clients see ClientDashboard
+ * - therapists/admins see TherapistCalendar
  */
-export default function Dashboard() {
-  const { role } = useUserRole();
+export function Dashboard() {
+  const { user } = useAuth();
+  const [role, setRole] = useState<"admin" | "therapist" | "client" | "unknown">("unknown");
+  const [loadingRole, setLoadingRole] = useState(true);
 
-  if (role === "loading") {
+  useEffect(() => {
+    if (!user) return;
+
+    (async () => {
+      setLoadingRole(true);
+      const { data, error } = await supabase.rpc("my_role");
+      if (error) {
+        console.warn("my_role failed:", error.message);
+        setRole("unknown");
+      } else {
+        const r = String(data ?? "unknown");
+        if (r === "admin" || r === "therapist" || r === "client") setRole(r);
+        else setRole("unknown");
+      }
+      setLoadingRole(false);
+    })();
+  }, [user]);
+
+  if (!user) return null;
+
+  if (loadingRole) {
     return (
       <div className="card">
-        <p>
-          <small>Loading…</small>
-        </p>
+        <h3>Loading…</h3>
       </div>
     );
   }
 
-  if (role === "admin") return <TherapistOrAdminDashboard isAdmin={true} />;
-  if (role === "therapist") return <TherapistOrAdminDashboard isAdmin={false} />;
+  if (role === "therapist" || role === "admin") {
+    return <TherapistCalendar />;
+  }
 
   return <ClientDashboard />;
 }

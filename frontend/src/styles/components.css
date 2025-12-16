@@ -1,4 +1,4 @@
-/* Skip link: hidden until keyboard focus */
+/* Skip link */
 .skipLink {
   position: absolute;
   left: -999px;
@@ -11,15 +11,16 @@
 }
 .skipLink:focus { left: var(--s5); }
 
-/* Header (sticky, translucent) */
+/* Header */
 .siteHeader {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(248, 241, 232, 0.85);
+  background: rgba(252, 245, 235, 0.85);
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(10px);
 }
+
 .headerInner {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -42,6 +43,7 @@
   border-radius: 12px;
   box-shadow: var(--shadow-sm);
 }
+
 .brandText { display: flex; flex-direction: column; line-height: 1.1; }
 .brandName { font-family: var(--font-serif); font-size: 1.05rem; color: var(--text); }
 .brandTagline { font-size: 0.9rem; color: var(--muted); }
@@ -63,23 +65,19 @@
   color: var(--text);
   text-decoration: none;
   border: 1px solid transparent;
-  transition: background var(--ott-duration-fast) var(--ott-ease),
-              border-color var(--ott-duration-fast) var(--ott-ease),
-              color var(--ott-duration-fast) var(--ott-ease);
 }
 .navLink:hover {
   background: rgba(161, 158, 184, 0.18);
   border-color: rgba(161, 158, 184, 0.35);
   text-decoration: none;
 }
-.navLink.isActive,
-.navLink--active {
+.navLink.isActive {
   background: rgba(108, 95, 134, 0.14);
   border-color: rgba(108, 95, 134, 0.30);
   color: var(--primary-700);
 }
 
-/* Header actions (auth) */
+/* Header actions */
 .headerActions {
   display: inline-flex;
   gap: var(--s2);
@@ -101,94 +99,84 @@
   font-weight: 600;
   text-decoration: none;
   box-shadow: var(--shadow-sm);
-  transition: transform var(--ott-duration-fast) var(--ott-ease),
-              background var(--ott-duration-fast) var(--ott-ease),
-              border-color var(--ott-duration-fast) var(--ott-ease);
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
 }
-.button:hover { background: var(--primary-700); text-decoration: none; transform: translateY(-1px); }
-.button:active { transform: translateY(0); }
+.button:hover { background: var(--primary-700); text-decoration: none; }
+.button:active { transform: translateY(1px); box-shadow: none; }
 .button--ghost {
   background: rgba(255, 253, 249, 0.85);
   color: var(--primary-700);
 }
 .button--ghost:hover { background: rgba(161, 158, 184, 0.18); }
 
-/* Cards and grids */
+/* Shared card grid */
 .cardGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--s5);
-  align-items: stretch;
-  margin-top: var(--s5);
 }
-@media (max-width: 900px) { .cardGrid { grid-template-columns: 1fr; } }
+@media (max-width: 900px) {
+  .cardGrid { grid-template-columns: 1fr; }
+}
 
 .card {
-  background: rgba(255, 253, 249, 0.92);
+  background: rgba(255, 253, 249, 0.90);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: clamp(1rem, 2.4vw, 1.5rem);
+  padding: var(--s5);
   box-shadow: var(--shadow-sm);
-  text-align: left;
-}
-.card h3 { margin-bottom: var(--s2); font-size: 1.15rem; }
-.card .muted { color: var(--muted); }
-
-/* Section headers with subtle rules */
-.sectionHeader {
-  max-width: 75ch;
-  margin-inline: auto;
-  text-align: center;
-  margin-bottom: var(--s6);
-}
-.sectionHeader p { color: var(--muted); }
-
-/* Badges and helper bits */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 12px;
-  padding: 2px 8px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  color: var(--muted);
-  background: var(--ott-color-primary-50);
 }
 
 /* Footer */
 .footer {
   border-top: 1px solid var(--border);
-  padding: var(--s7) 0;
+  padding: var(--s6) 0;
   color: var(--muted);
+}
+
+/* ====== Home hero / sections ====== */
+
+.ott-eyebrow {
+  display: inline-block;
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin-bottom: var(--s3);
+}
+
+.ott-hero__title {
+  margin-bottom: var(--s3);
+}
+
+.ott-hero__lead {
+  font-size: 1.1rem;
+  color: var(--muted);
+  margin-bottom: var(--s5);
+}
+
+.ott-actions {
+  display: flex;
+  gap: var(--s3);
+  flex-wrap: wrap;
+}
+
+.ott-section__header {
   text-align: center;
+  margin: 0 auto var(--s6);
+  max-width: 65ch;
+}
+.ott-section__lead {
+  color: var(--muted);
+  margin-top: var(--s2);
 }
 
-/* Home-page “privacy-first” section alignment */
-.section .cardGrid,
-.section .sectionHeader,
-.section .prose {
-  margin-inline: auto;
-}
-
-/* Optional “tech showcase” tiles (EMDR, light bars, biofeedback, etc.) */
-.techGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--s5);
-  margin-top: var(--s5);
-}
-@media (max-width: 900px) { .techGrid { grid-template-columns: 1fr; } }
-.techTile {
+/* Content chips for placeholder tech section */
+.ott-chipRow { display: flex; gap: var(--s2); flex-wrap: wrap; margin-top: var(--s3); }
+.ott-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  border-radius: 999px;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
-  overflow: hidden;
+  background: #fffdfb;
 }
-.techTile__image {
-  aspect-ratio: 16/9;
-  background: var(--ott-color-secondary-50);
-}
-.techTile__body { padding: var(--s4); }
-.techTile__body p { color: var(--muted); }

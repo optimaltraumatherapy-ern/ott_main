@@ -1,29 +1,30 @@
 :root {
-  font-family: var(--ott-font-sans);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   line-height: 1.5;
-  color: var(--ott-color-text);
-  background: var(--ott-color-bg);
+  color: #111;
+  background: #fff;
 }
 
 a { color: inherit; }
 .container { max-width: 1100px; margin: 0 auto; padding: 16px; }
 
+/* Legacy nav block (kept for compatibility with NavBar.tsx) */
 .nav {
   display: flex; gap: 12px; align-items: center; justify-content: space-between;
-  border-bottom: 1px solid var(--ott-color-border); padding: 12px 0;
+  border-bottom: 1px solid #eee; padding: 12px 0;
 }
 .nav a { text-decoration: none; padding: 6px 10px; border-radius: 8px; }
-.nav a:hover { background: rgba(111,99,138,0.08); }
+.nav a:hover { background: #f3f3f3; }
 
+/* Legacy cards */
 .card {
-  border: 1px solid var(--ott-color-border);
+  border: 1px solid #eee;
   border-radius: 12px;
   padding: 14px;
   margin: 12px 0;
-  background: var(--ott-color-surface);
-  box-shadow: var(--ott-shadow-sm);
 }
 
+/* Legacy grid */
 .grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
 @media (min-width: 900px) { .grid { grid-template-columns: 1fr 1fr; } }
 
@@ -31,43 +32,18 @@ label { display: block; font-weight: 600; margin-top: 10px; }
 input, textarea, select {
   width: 100%;
   padding: 10px;
-  border: 1px solid rgba(108,95,134,0.25);
+  border: 1px solid #ddd;
   border-radius: 10px;
-  background: rgba(255,253,249,0.92);
   margin-top: 6px;
 }
 button {
   padding: 10px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(108,95,134,0.35);
-  background: var(--ott-color-primary);
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  background: #111;
   color: #fff;
   cursor: pointer;
-  box-shadow: var(--ott-shadow-sm);
 }
-button:hover { background: var(--ott-color-primary-700); }
 button:disabled { opacity: 0.6; cursor: not-allowed; }
-
-small { color: var(--ott-color-text-muted); }
-.badge {
-  font-size: 12px; padding: 2px 8px; border: 1px solid var(--ott-color-border); border-radius: 999px;
-  background: var(--ott-color-primary-50); color: var(--ott-color-text-muted);
-}
-
-/* Bring in key modern classes used across the new design */
-.page { padding-block: var(--ott-space-10); }
-.section { padding-block: var(--ott-space-12); }
-.cardGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--ott-space-5);
-}
-@media (max-width: 900px) { .cardGrid { grid-template-columns: 1fr; } }
-
-.button { all: unset; display: inline-flex; align-items: center; justify-content: center;
-  gap: 8px; padding: 10px 14px; border-radius: 999px; border: 1px solid rgba(108,95,134,0.35);
-  background: var(--ott-color-primary); color: #fff; font-weight: 600; box-shadow: var(--ott-shadow-sm); cursor: pointer;
-}
-.button:hover { background: var(--ott-color-primary-700); }
-.button--ghost { background: rgba(255,253,249,0.85); color: var(--ott-color-primary-700); }
-.button--ghost:hover { background: rgba(161,158,184,0.18); }
+small { color: #555; }
+.badge { font-size: 12px; padding: 2px 8px; border: 1px solid #ddd; border-radius: 999px; }

@@ -3,11 +3,11 @@
      Brand Colors (logo-derived)
      ========================= */
   --ott-color-bg: #f8f1e8;          /* warm cream */
-  --ott-color-surface: #fffdf9;     /* soft warm surface */
-  --ott-color-surface-2: #fffcf8;   /* slightly brighter panels */
+  --ott-color-surface: #fffcf8;     /* slightly brighter surface */
+  --ott-color-surface-2: #ffffff;   /* pure white panels as needed */
 
   --ott-color-text: #2c262e;        /* calm charcoal */
-  --ott-color-text-muted: #5e5863;  /* soft body text */
+  --ott-color-text-muted: #5e5863;  /* softer body text */
   --ott-color-border: rgba(111, 99, 138, 0.18);
 
   --ott-color-primary: #6f638a;     /* lavender */
@@ -32,30 +32,24 @@
   /* Focus ring (soft but visible) */
   --ott-color-focus: rgba(174, 177, 199, 0.55);
 
-  /* =========================
-     Typography
-     ========================= */
+  /* Typography */
   --ott-font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
   --ott-font-serif: ui-serif, Georgia, "Times New Roman", Times, serif;
 
   /* Font sizes */
-  --ott-text-xs: 0.8125rem; /* 13px */
-  --ott-text-sm: 0.875rem;  /* 14px */
-  --ott-text-md: 1rem;      /* 16px */
-  --ott-text-lg: 1.125rem;  /* 18px */
-  --ott-text-xl: 1.375rem;  /* 22px */
-  --ott-text-2xl: clamp(1.6rem, 2.2vw, 2rem);
-  --ott-text-3xl: clamp(2rem, 3.3vw, 2.6rem);
+  --ott-text-xs: 0.8125rem;
+  --ott-text-sm: 0.875rem;
+  --ott-text-md: 1rem;
+  --ott-text-lg: 1.125rem;
+  --ott-text-xl: 1.375rem;
 
   /* Line heights */
   --ott-leading-tight: 1.15;
   --ott-leading-normal: 1.5;
   --ott-leading-relaxed: 1.7;
 
-  /* =========================
-     Spacing + Radius
-     ========================= */
+  /* Spacing + Radius */
   --ott-space-1: 0.25rem;
   --ott-space-2: 0.5rem;
   --ott-space-3: 0.75rem;
@@ -72,16 +66,12 @@
   --ott-radius-lg: 18px;
   --ott-radius-xl: 24px;
 
-  /* =========================
-     Shadows (soft & calm)
-     ========================= */
+  /* Shadows */
   --ott-shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
   --ott-shadow-md: 0 10px 24px rgba(16, 24, 40, 0.10);
   --ott-shadow-lg: 0 18px 40px rgba(16, 24, 40, 0.12);
 
-  /* =========================
-     Motion (gentle)
-     ========================= */
+  /* Motion */
   --ott-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ott-duration-fast: 120ms;
   --ott-duration-normal: 180ms;

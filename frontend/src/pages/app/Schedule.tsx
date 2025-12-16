@@ -8,6 +8,8 @@ type Slot = {
   start_time: string;
   end_time: string;
   is_booked: boolean;
+  is_public: boolean;
+  room_id: string | null;
 };
 
 type Therapist = {
@@ -15,19 +17,40 @@ type Therapist = {
   display_name: string | null;
 };
 
+type PublicGroupSession = {
+  id: string;
+  therapist_id: string;
+  room_id: string | null;
+  title: string;
+  description: string | null;
+  start_time: string;
+  end_time: string;
+  capacity: number;
+  joined_count: number;
+  is_joined: boolean;
+};
+
 export function Schedule() {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [therapists, setTherapists] = useState<Record<string, Therapist>>({});
   const [status, setStatus] = useState<string | null>(null);
 
+  const [groups, setGroups] = useState<PublicGroupSession[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
   useEffect(() => {
     (async () => {
-      const { data: slotData } = await supabase
+      setLoading(true);
+
+      const { data: slotData, error: slotErr } = await supabase
         .from("availability_slots")
-        .select("id,therapist_id,start_time,end_time,is_booked")
+        .select("id,therapist_id,start_time,end_time,is_booked,is_public,room_id")
         .eq("is_booked", false)
+        .eq("is_public", true)
         .order("start_time", { ascending: true })
-        .limit(30);
+        .limit(40);
+
+      if (slotErr) setStatus(`Failed loading slots: ${slotErr.message}`);
 
       const s = (slotData as Slot[]) ?? [];
       setSlots(s);
@@ -43,6 +66,13 @@ export function Schedule() {
         ((tData as Therapist[]) ?? []).forEach((t) => (map[t.therapist_id] = t));
         setTherapists(map);
       }
+
+      // group sessions
+      const { data: gData, error: gErr } = await supabase.rpc("list_public_group_sessions", {});
+      if (gErr) setStatus((prev) => prev ?? `Failed loading group sessions: ${gErr.message}`);
+      setGroups((gData as PublicGroupSession[]) ?? []);
+
+      setLoading(false);
     })();
   }, []);
 
@@ -56,30 +86,114 @@ export function Schedule() {
     setSlots((prev) => prev.filter((s) => s.id !== slotId));
   }
 
+  async function joinGroup(id: string) {
+    setStatus(null);
+    const { error } = await supabase.rpc("join_group_session", { p_group_session_id: id });
+    if (error) return setStatus(`Join failed: ${error.message}`);
+
+    setStatus("Joined group session.");
+    setGroups((prev) =>
+      prev.map((g) =>
+        g.id === id ? { ...g, is_joined: true, joined_count: g.joined_count + 1 } : g
+      )
+    );
+  }
+
+  async function leaveGroup(id: string) {
+    setStatus(null);
+    const { error } = await supabase.rpc("leave_group_session", { p_group_session_id: id });
+    if (error) return setStatus(`Leave failed: ${error.message}`);
+
+    setStatus("Left group session.");
+    setGroups((prev) =>
+      prev.map((g) =>
+        g.id === id ? { ...g, is_joined: false, joined_count: Math.max(0, g.joined_count - 1) } : g
+      )
+    );
+  }
+
   return (
     <div className="card">
-      <h3>Schedule a consultation</h3>
-      <p><small>Select an available slot and book instantly.</small></p>
+      <h3>Schedule</h3>
+      <p>
+        <small>Select an available slot to book instantly, or join a public group session.</small>
+      </p>
 
       {status && <p>{status}</p>}
 
-      {rows.length === 0 ? (
-        <p><small>No open slots yet. Please check back soon.</small></p>
+      {loading ? (
+        <p>
+          <small>Loading…</small>
+        </p>
       ) : (
-        <ul>
-          {rows.map((s) => (
-            <li key={s.id} style={{ marginBottom: 10 }}>
-              <div>
-                <strong>{therapists[s.therapist_id]?.display_name ?? "Therapist"}</strong>{" "}
-                <span className="badge">consult</span>
-              </div>
-              <div>
-                {formatDateTime(s.start_time)} → {formatDateTime(s.end_time)}
-              </div>
-              <button onClick={() => book(s.id)} style={{ marginTop: 6 }}>Book</button>
-            </li>
-          ))}
-        </ul>
+        <>
+          <h4>Public group sessions</h4>
+          {groups.length === 0 ? (
+            <p>
+              <small>No public group sessions scheduled yet.</small>
+            </p>
+          ) : (
+            <ul>
+              {groups.map((g) => {
+                const remaining = Math.max(0, g.capacity - g.joined_count);
+                return (
+                  <li key={g.id} style={{ marginBottom: 10 }}>
+                    <div>
+                      <strong>{g.title}</strong>{" "}
+                      <span className="badge">group</span>{" "}
+                      <small>
+                        ({remaining} spots left)
+                      </small>
+                    </div>
+                    {g.description && (
+                      <div>
+                        <small>{g.description}</small>
+                      </div>
+                    )}
+                    <div>
+                      {formatDateTime(g.start_time)} → {formatDateTime(g.end_time)}
+                    </div>
+                    <div style={{ marginTop: 6 }}>
+                      {g.is_joined ? (
+                        <button onClick={() => leaveGroup(g.id)}>Leave</button>
+                      ) : (
+                        <button onClick={() => joinGroup(g.id)} disabled={remaining <= 0}>
+                          {remaining <= 0 ? "Full" : "Join"}
+                        </button>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+
+          <hr style={{ margin: "14px 0" }} />
+
+          <h4>1:1 available slots</h4>
+          {rows.length === 0 ? (
+            <p>
+              <small>No open slots yet. Please check back soon.</small>
+            </p>
+          ) : (
+            <ul>
+              {rows.map((s) => (
+                <li key={s.id} style={{ marginBottom: 10 }}>
+                  <div>
+                    <strong>{therapists[s.therapist_id]?.display_name ?? "Therapist"}</strong>{" "}
+                    <span className="badge">consult</span>
+                  </div>
+                  <div>
+                    {formatDateTime(s.start_time)} → {formatDateTime(s.end_time)}
+                  </div>
+                  <button onClick={() => book(s.id)} style={{ marginTop: 6 }}>
+                    Book
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
       )}
     </div>
   );

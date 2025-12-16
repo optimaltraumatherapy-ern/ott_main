@@ -3,11 +3,11 @@
      Brand Colors (logo-derived)
      ========================= */
   --ott-color-bg: #f8f1e8;          /* warm cream */
-  --ott-color-surface: #fffcf8;     /* slightly brighter surface */
-  --ott-color-surface-2: #ffffff;   /* pure white panels as needed */
+  --ott-color-surface: #fffdf9;     /* soft warm surface */
+  --ott-color-surface-2: #fffcf8;   /* slightly brighter panels */
 
   --ott-color-text: #2c262e;        /* calm charcoal */
-  --ott-color-text-muted: #5e5863;  /* softer body text */
+  --ott-color-text-muted: #5e5863;  /* soft body text */
   --ott-color-border: rgba(111, 99, 138, 0.18);
 
   --ott-color-primary: #6f638a;     /* lavender */
@@ -34,11 +34,7 @@
 
   /* =========================
      Typography
-     =========================
-     Notes:
-     - For privacy + simplicity, use system fonts by default.
-     - If later you want Google/self-hosted fonts, we can swap tokens only.
-  */
+     ========================= */
   --ott-font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
   --ott-font-serif: ui-serif, Georgia, "Times New Roman", Times, serif;
@@ -49,6 +45,8 @@
   --ott-text-md: 1rem;      /* 16px */
   --ott-text-lg: 1.125rem;  /* 18px */
   --ott-text-xl: 1.375rem;  /* 22px */
+  --ott-text-2xl: clamp(1.6rem, 2.2vw, 2rem);
+  --ott-text-3xl: clamp(2rem, 3.3vw, 2.6rem);
 
   /* Line heights */
   --ott-leading-tight: 1.15;

@@ -1,17 +1,8 @@
-.form {
-  display: grid;
-  gap: var(--s4);
-}
+.form { display: grid; gap: var(--s4); max-width: 640px; margin-inline: auto; text-align: left; }
 
-.field {
-  display: grid;
-  gap: var(--s2);
-}
+.field { display: grid; gap: var(--s2); }
 
-.label {
-  font-weight: 600;
-  color: var(--text);
-}
+.label { font-weight: 600; color: var(--text); }
 
 .input,
 .textarea,
@@ -20,21 +11,22 @@
   padding: 12px 12px;
   border-radius: 12px;
   border: 1px solid rgba(108, 95, 134, 0.25);
-  background: rgba(255, 253, 249, 0.85);
+  background: rgba(255, 253, 249, 0.92);
   color: var(--text);
+  transition: box-shadow var(--ott-duration-fast) var(--ott-ease), border-color var(--ott-duration-fast) var(--ott-ease);
 }
 
-.textarea {
-  min-height: 120px;
-  resize: vertical;
-}
+.textarea { min-height: 120px; resize: vertical; }
 
 .input:focus,
 .textarea:focus,
 .select:focus {
   outline: none;
   box-shadow: var(--focus-ring);
+  border-color: rgba(108, 95, 134, 0.45);
 }
+
+.helper { color: var(--muted); font-size: var(--ott-text-sm); }
 
 .formActions {
   display: flex;

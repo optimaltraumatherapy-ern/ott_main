@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
 import { formatDateTime } from "../../lib/time";
+import { useAuth } from "../../context/AuthContext";
 
 type Profile = {
   id: string;
@@ -48,6 +49,7 @@ function niceName(p: Profile | null | undefined) {
 
 export function AdminClients(props: { role: "admin" | "therapist" }) {
   const nav = useNavigate();
+  const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -67,6 +69,9 @@ export function AdminClients(props: { role: "admin" | "therapist" }) {
 
   const [assignTherapistId, setAssignTherapistId] = useState("");
 
+  // ✅ FIX: selectedProfile state is inside the component (Hooks must be here)
+  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
+
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return clients;
@@ -81,63 +86,83 @@ export function AdminClients(props: { role: "admin" | "therapist" }) {
     });
   }, [clients, q, clientNames]);
 
-  async function loadClients() {
-    setLoading(true);
-    setErr(null);
-
-    try {
-      // Admin: all clients from profiles.role
-      // Therapist: clients they’re linked to (via therapist_clients), using existing RPC list_my_clients
-      if (props.role === "admin") {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("id,email,full_name,role")
-          .eq("role", "client")
-          .order("created_at", { ascending: false })
-          .limit(500);
-
-        if (error) throw error;
-
-        setClients((data as Profile[]) ?? []);
-      } else {
-        const { data, error } = await supabase.rpc("list_my_clients");
-        if (error) throw error;
-
-        const rows = (data as Array<{ client_id: string; display_name: string | null }>) ?? [];
-        // Convert into “profiles-like” rows; we’ll use client_profiles display_name primarily
-        setClients(
-          rows.map((r) => ({ id: r.client_id, email: null, full_name: null, role: "client" }))
-        );
-      }
-
-      // Load display names for the client list
-      const ids = (props.role === "admin")
-        ? ((clients as any[]) ?? []).map((c) => c.id)
-        : [];
-
-      // For therapist role we still want client_profiles names; for admin role we do too
-      // We'll load names after we set clients (below), in a second effect.
-    } catch (e: any) {
-      setErr(e?.message ?? "Failed loading clients");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // Load therapists list (for assignment + display)
+  // Load therapists list (for admin assignment + display)
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("therapist_profiles")
         .select("therapist_id,display_name,is_active")
         .order("display_name", { ascending: true });
 
-      setTherapists((data as TherapistProfile[]) ?? []);
+      if (!error) setTherapists((data as TherapistProfile[]) ?? []);
     })();
   }, []);
 
+  // Load clients list based on role
   useEffect(() => {
-    loadClients();
+    let mounted = true;
+
+    (async () => {
+      setLoading(true);
+      setErr(null);
+
+      try {
+        if (props.role === "admin") {
+          const { data, error } = await supabase
+            .from("profiles")
+            .select("id,email,full_name,role")
+            .eq("role", "client")
+            .order("created_at", { ascending: false })
+            .limit(500);
+
+          if (error) throw error;
+
+          const rows = (data as Profile[]) ?? [];
+          if (!mounted) return;
+
+          setClients(rows);
+
+          // Auto-select first client if none selected
+          if (!selectedId && rows.length > 0) setSelectedId(rows[0].id);
+        } else {
+          // Therapist: clients they’re linked to (via therapist_clients)
+          const { data, error } = await supabase.rpc("list_my_clients");
+          if (error) throw error;
+
+          const rows = (data as Array<{ client_id: string; display_name: string | null }>) ?? [];
+          const pseudoProfiles: Profile[] = rows.map((r) => ({
+            id: r.client_id,
+            email: null,
+            full_name: null,
+            role: "client",
+          }));
+
+          if (!mounted) return;
+
+          setClients(pseudoProfiles);
+
+          // Seed display names directly from RPC result to reduce extra queries
+          const nameMap: Record<string, string> = {};
+          rows.forEach((r) => {
+            if (r.display_name) nameMap[r.client_id] = r.display_name;
+          });
+          setClientNames((prev) => ({ ...prev, ...nameMap }));
+
+          if (!selectedId && pseudoProfiles.length > 0) setSelectedId(pseudoProfiles[0].id);
+        }
+      } catch (e: any) {
+        if (!mounted) return;
+        setErr(e?.message ?? "Failed loading clients");
+        setClients([]);
+      } finally {
+        if (!mounted) return;
+        setLoading(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.role]);
 
@@ -147,74 +172,123 @@ export function AdminClients(props: { role: "admin" | "therapist" }) {
 
     (async () => {
       const ids = clients.map((c) => c.id);
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("client_profiles")
         .select("client_id,display_name")
         .in("client_id", ids);
+
+      if (error) return;
 
       const map: Record<string, string> = {};
       ((data as ClientDisplay[]) ?? []).forEach((r) => {
         if (r.display_name) map[r.client_id] = r.display_name;
       });
 
-      setClientNames(map);
+      setClientNames((prev) => ({ ...prev, ...map }));
     })();
   }, [clients]);
 
   // Load detail panels when client selected
   useEffect(() => {
-    if (!selectedId) return;
+    if (!selectedId) {
+      setAssignedTherapists([]);
+      setAppts([]);
+      setInsurance([]);
+      setForms([]);
+      setSelectedProfile(null);
+      return;
+    }
+
+    let mounted = true;
 
     (async () => {
       setErr(null);
 
-      // Assigned therapists
-      const { data: tcData, error: tcErr } = await supabase
-        .from("therapist_clients")
-        .select("therapist_id")
-        .eq("client_id", selectedId);
+      try {
+        // Assigned therapists (admin sees all, therapist sees what RLS allows)
+        const { data: tcData, error: tcErr } = await supabase
+          .from("therapist_clients")
+          .select("therapist_id")
+          .eq("client_id", selectedId);
 
-      if (tcErr) {
-        setAssignedTherapists([]);
-      } else {
-        const tIds = ((tcData as any[]) ?? []).map((x) => x.therapist_id);
-        const assigned = therapists.filter((t) => tIds.includes(t.therapist_id));
-        setAssignedTherapists(assigned);
+        if (!mounted) return;
+
+        if (tcErr) {
+          setAssignedTherapists([]);
+        } else {
+          const tIds = ((tcData as any[]) ?? []).map((x) => x.therapist_id);
+          const assigned = therapists.filter((t) => tIds.includes(t.therapist_id));
+          setAssignedTherapists(assigned);
+        }
+
+        // Contact info
+        // Admin already has profiles info in list; therapist needs a direct fetch (requires profiles select policy)
+        if (props.role === "therapist") {
+          const { data: pData, error: pErr } = await supabase
+            .from("profiles")
+            .select("id,email,full_name,role")
+            .eq("id", selectedId)
+            .single();
+
+          if (!mounted) return;
+
+          if (pErr) setSelectedProfile(null);
+          else setSelectedProfile((pData as Profile) ?? null);
+        } else {
+          const p = clients.find((c) => c.id === selectedId) ?? null;
+          setSelectedProfile(p);
+        }
+
+        // Appointments (therapist: show only their own sessions)
+        let apptQ = supabase
+          .from("appointments")
+          .select("id,start_time,end_time,status,kind,therapist_id,client_id")
+          .eq("client_id", selectedId)
+          .order("start_time", { ascending: false })
+          .limit(50);
+
+        if (props.role === "therapist" && user?.id) {
+          apptQ = apptQ.eq("therapist_id", user.id);
+        }
+
+        const { data: apptData } = await apptQ;
+        if (!mounted) return;
+        setAppts((apptData as Appointment[]) ?? []);
+
+        // Insurance (therapist should only see assigned clients; enforce with RLS if needed)
+        const { data: insData } = await supabase
+          .from("insurance_documents")
+          .select("id,provider,member_id,group_number,front_path,back_path,created_at")
+          .eq("client_id", selectedId)
+          .order("created_at", { ascending: false })
+          .limit(20);
+
+        if (!mounted) return;
+        setInsurance((insData as InsuranceDoc[]) ?? []);
+
+        // Forms
+        const { data: formData } = await supabase
+          .from("form_submissions")
+          .select("id,template_key,status,submitted_at,created_at")
+          .eq("client_id", selectedId)
+          .order("created_at", { ascending: false })
+          .limit(50);
+
+        if (!mounted) return;
+        setForms((formData as FormSubmission[]) ?? []);
+      } catch (e: any) {
+        if (!mounted) return;
+        setErr(e?.message ?? "Failed loading client details");
       }
-
-      // Appointments
-      const { data: apptData } = await supabase
-        .from("appointments")
-        .select("id,start_time,end_time,status,kind,therapist_id,client_id")
-        .eq("client_id", selectedId)
-        .order("start_time", { ascending: false })
-        .limit(50);
-
-      setAppts((apptData as Appointment[]) ?? []);
-
-      // Insurance
-      const { data: insData } = await supabase
-        .from("insurance_documents")
-        .select("id,provider,member_id,group_number,front_path,back_path,created_at")
-        .eq("client_id", selectedId)
-        .order("created_at", { ascending: false })
-        .limit(20);
-
-      setInsurance((insData as InsuranceDoc[]) ?? []);
-
-      // Forms
-      const { data: formData } = await supabase
-        .from("form_submissions")
-        .select("id,template_key,status,submitted_at,created_at")
-        .eq("client_id", selectedId)
-        .order("created_at", { ascending: false })
-        .limit(50);
-
-      setForms((formData as FormSubmission[]) ?? []);
     })();
-  }, [selectedId, therapists]);
+
+    return () => {
+      mounted = false;
+    };
+  }, [selectedId, therapists, props.role, clients, user?.id]);
 
   async function assignTherapist() {
+    if (props.role !== "admin") return;
     if (!selectedId) return;
     if (!assignTherapistId) return;
 
@@ -229,8 +303,15 @@ export function AdminClients(props: { role: "admin" | "therapist" }) {
     }
 
     setAssignTherapistId("");
-    // refresh assignment list quickly
-    const assigned = therapists.filter((t) => t.therapist_id === assignTherapistId || assignedTherapists.some(a => a.therapist_id === t.therapist_id));
+
+    // Refresh assignment list from DB (more reliable than trying to patch state)
+    const { data: tcData } = await supabase
+      .from("therapist_clients")
+      .select("therapist_id")
+      .eq("client_id", selectedId);
+
+    const tIds = ((tcData as any[]) ?? []).map((x) => x.therapist_id);
+    const assigned = therapists.filter((t) => tIds.includes(t.therapist_id));
     setAssignedTherapists(assigned);
   }
 
@@ -248,7 +329,11 @@ export function AdminClients(props: { role: "admin" | "therapist" }) {
       <div className="card">
         <h3 style={{ marginTop: 0 }}>Clients</h3>
         <p className="muted">
-          <small>View client profile info, sessions, therapist assignment, insurance and forms.</small>
+          <small>
+            {props.role === "admin"
+              ? "Admin: view all clients and assign therapists."
+              : "Therapist: view only your assigned clients."}
+          </small>
         </p>
 
         {err && <p style={{ color: "crimson" }}><small>{err}</small></p>}
@@ -265,7 +350,7 @@ export function AdminClients(props: { role: "admin" | "therapist" }) {
 
       <div style={{ display: "grid", gridTemplateColumns: "0.9fr 1.1fr", gap: 12, alignItems: "start" }}>
         <div className="card">
-          <h4 style={{ marginTop: 0 }}>All clients</h4>
+          <h4 style={{ marginTop: 0 }}>{props.role === "admin" ? "All clients" : "My clients"}</h4>
           {filtered.length === 0 ? (
             <p className="muted"><small>No clients found.</small></p>
           ) : (
@@ -311,8 +396,27 @@ export function AdminClients(props: { role: "admin" | "therapist" }) {
                   </div>
                   <div className="muted"><small>{selectedId}</small></div>
                 </div>
-                <button onClick={() => nav(`/app/notes?client=${encodeURIComponent(selectedId)}`)}>Open notes</button>
+                <button onClick={() => nav(`/app/notes?client=${encodeURIComponent(selectedId)}`)}>
+                  Open notes
+                </button>
               </div>
+
+              <hr style={{ margin: "12px 0" }} />
+
+              <h5 style={{ margin: "0 0 8px 0" }}>Contact</h5>
+              {!selectedProfile ? (
+                <p className="muted"><small>Contact info unavailable.</small></p>
+              ) : (
+                <div className="card" style={{ padding: 10 }}>
+                  <div><strong>{selectedProfile.full_name ?? "Name not set"}</strong></div>
+                  <div className="muted"><small>{selectedProfile.email ?? "Email not set"}</small></div>
+                  {selectedProfile.email ? (
+                    <div style={{ marginTop: 8 }}>
+                      <a href={`mailto:${selectedProfile.email}`}>Email client</a>
+                    </div>
+                  ) : null}
+                </div>
+              )}
 
               <hr style={{ margin: "12px 0" }} />
 
@@ -332,7 +436,11 @@ export function AdminClients(props: { role: "admin" | "therapist" }) {
 
               {props.role === "admin" ? (
                 <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
-                  <select value={assignTherapistId} onChange={(e) => setAssignTherapistId(e.target.value)} style={{ flex: 1 }}>
+                  <select
+                    value={assignTherapistId}
+                    onChange={(e) => setAssignTherapistId(e.target.value)}
+                    style={{ flex: 1 }}
+                  >
                     <option value="">Assign therapist…</option>
                     {therapists.map((t) => (
                       <option key={t.therapist_id} value={t.therapist_id}>
@@ -340,7 +448,9 @@ export function AdminClients(props: { role: "admin" | "therapist" }) {
                       </option>
                     ))}
                   </select>
-                  <button onClick={assignTherapist}>Assign</button>
+                  <button onClick={assignTherapist} disabled={!assignTherapistId}>
+                    Assign
+                  </button>
                 </div>
               ) : null}
 
@@ -372,9 +482,7 @@ export function AdminClients(props: { role: "admin" | "therapist" }) {
                   {insurance.map((d) => (
                     <li key={d.id} style={{ marginBottom: 6 }}>
                       <div style={{ fontWeight: 700 }}>{d.provider ?? "Insurance"}</div>
-                      <div className="muted">
-                        <small>Uploaded: {formatDateTime(d.created_at)}</small>
-                      </div>
+                      <div className="muted"><small>Uploaded: {formatDateTime(d.created_at)}</small></div>
                     </li>
                   ))}
                 </ul>
@@ -406,3 +514,5 @@ export function AdminClients(props: { role: "admin" | "therapist" }) {
     </div>
   );
 }
+
+export default AdminClients;

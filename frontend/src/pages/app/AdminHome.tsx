@@ -6,6 +6,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import { supabase } from "../../lib/supabaseClient";
 import { AppointmentModal } from "../../components/scheduling/AppointmentModal";
 import { formatDateTime } from "../../lib/time";
+import { useAuth } from "../../context/AuthContext";
 
 type CalendarEventRow = {
   id: string;
@@ -46,6 +47,7 @@ function displayPerson(p?: ProfileRow | null) {
 
 export function AdminHome(props: { role: "admin" | "therapist" }) {
   const nav = useNavigate();
+  const { user } = useAuth();
 
   // Appointment modal (click events in mini calendar)
   const [apptModalOpen, setApptModalOpen] = useState(false);
@@ -110,11 +112,18 @@ export function AdminHome(props: { role: "admin" | "therapist" }) {
       setMissingErr(null);
 
       try {
+        if (props.role === "therapist" && !user) {
+          if (!mounted) return;
+          setMissingErr("Not signed in.");
+          setMissingRows([]);
+          setMissingLoading(false);
+          return;
+        }
+
         const nowIso = new Date().toISOString();
         const sinceIso = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
 
-        // Pull ended appointments (recent window)
-        const { data: apptsData, error: apptsErr } = await supabase
+        let q = supabase
           .from("appointments")
           .select("id,client_id,therapist_id,start_time,end_time,status,kind")
           .lt("end_time", nowIso)
@@ -122,6 +131,12 @@ export function AdminHome(props: { role: "admin" | "therapist" }) {
           .order("end_time", { ascending: false })
           .limit(300);
 
+        // ✅ Therapist-specific missing notes
+        if (props.role === "therapist" && user?.id) {
+          q = q.eq("therapist_id", user.id);
+        }
+
+        const { data: apptsData, error: apptsErr } = await q;
         if (apptsErr) throw apptsErr;
 
         const appts = (apptsData as ApptRow[]) ?? [];
@@ -143,7 +158,6 @@ export function AdminHome(props: { role: "admin" | "therapist" }) {
         if (notesErr) throw notesErr;
 
         const hasNote = new Set(((notesData as any[]) ?? []).map((n) => n.appointment_id).filter(Boolean));
-
         const missing = appts.filter((a) => !hasNote.has(a.id));
 
         // Build name lookups
@@ -178,7 +192,10 @@ export function AdminHome(props: { role: "admin" | "therapist" }) {
         const rows = missing.map((m) => ({
           ...m,
           client_name: clientNames[m.client_id] || displayPerson(profiles[m.client_id]) || m.client_id,
-          therapist_name: therapistNames[m.therapist_id] || displayPerson(profiles[m.therapist_id]) || m.therapist_id,
+          therapist_name:
+            props.role === "therapist"
+              ? "You"
+              : (therapistNames[m.therapist_id] || displayPerson(profiles[m.therapist_id]) || m.therapist_id),
         }));
 
         if (!mounted) return;
@@ -194,7 +211,7 @@ export function AdminHome(props: { role: "admin" | "therapist" }) {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [props.role, user?.id]);
 
   const twoCol: React.CSSProperties = useMemo(
     () => ({
@@ -211,7 +228,7 @@ export function AdminHome(props: { role: "admin" | "therapist" }) {
       <div className="card">
         <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center" }}>
           <div>
-            <h3 style={{ margin: 0 }}>Admin Home</h3>
+            <h3 style={{ margin: 0 }}>{props.role === "admin" ? "Admin Home" : "Therapist Home"}</h3>
             <p className="muted" style={{ margin: "6px 0 0 0" }}>
               <small>Quick overview + shortcuts.</small>
             </p>
@@ -254,7 +271,10 @@ export function AdminHome(props: { role: "admin" | "therapist" }) {
         <div className="card">
           <h4 style={{ marginTop: 0 }}>Sessions missing notes</h4>
           <p className="muted" style={{ marginTop: 6 }}>
-            <small>Ended appointments in the last 14 days with no linked note.</small>
+            <small>
+              Ended appointments in the last 14 days with no linked note.
+              {props.role === "therapist" ? " (Your sessions only.)" : null}
+            </small>
           </p>
 
           {missingLoading ? (
@@ -303,7 +323,7 @@ export function AdminHome(props: { role: "admin" | "therapist" }) {
 
           {missingRows.length > 18 ? (
             <p className="muted">
-              <small>Showing first 18. Use Notes page for more.</small>
+              <small>Showing first 18.</small>
             </p>
           ) : null}
         </div>
@@ -318,7 +338,6 @@ export function AdminHome(props: { role: "admin" | "therapist" }) {
         onClose={() => setApptModalOpen(false)}
         onSaved={() => setApptModalOpen(false)}
         onEditSeries={() => {
-          // On the home card we keep it simple; series edits happen in Schedule tab.
           nav("/app/schedule");
         }}
       />

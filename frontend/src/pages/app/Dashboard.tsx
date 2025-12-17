@@ -6,7 +6,7 @@ import { formatDateTime } from "../../lib/time";
 
 import { TherapistCalendar } from "./TherapistCalendar";
 
-// Staff pages (new)
+// Staff pages
 import { AdminHome } from "./AdminHome";
 import { AdminSchedule } from "./AdminSchedule";
 import { AdminClients } from "./AdminClients";
@@ -15,6 +15,7 @@ import { AdminTherapists } from "./AdminTherapists";
 import { AdminAssessments } from "./AdminAssessments";
 import { AdminInsurance } from "./AdminInsurance";
 import { AdminForms } from "./AdminForms";
+import { AdminFacilities } from "./AdminFacilities"; // if you wired this in
 
 type MyRole = "admin" | "therapist" | "client" | "unknown";
 
@@ -79,14 +80,20 @@ function StaffShell(props: { role: "admin" | "therapist"; userEmailOrId: string 
       { to: "/app/notes", label: "Notes", roles: ["admin", "therapist"] as const },
     ];
 
-    const adminOnly = [
-      { to: "/app/assessments", label: "Assessments", roles: ["admin"] as const },
-      { to: "/app/insurance", label: "Insurance", roles: ["admin"] as const },
-      { to: "/app/forms", label: "Submitted forms", roles: ["admin"] as const },
-      { to: "/app/therapists", label: "Therapists", roles: ["admin"] as const },
+    // Pages both admin + therapist should see (role-aware inside page)
+    const clinician = [
+      { to: "/app/assessments", label: "Assessments", roles: ["admin", "therapist"] as const },
+      { to: "/app/insurance", label: "Insurance", roles: ["admin", "therapist"] as const },
+      { to: "/app/forms", label: "Submitted forms", roles: ["admin", "therapist"] as const },
     ];
 
-    return props.role === "admin" ? [...base, ...adminOnly] : base;
+    // Admin-only pages
+    const adminOnly = [
+      { to: "/app/therapists", label: "Therapists", roles: ["admin"] as const },
+      { to: "/app/facilities", label: "Facilities", roles: ["admin"] as const },
+    ];
+
+    return props.role === "admin" ? [...base, ...clinician, ...adminOnly] : [...base, ...clinician];
   }, [props.role]);
 
   async function logout() {
@@ -157,26 +164,23 @@ function StaffShell(props: { role: "admin" | "therapist"; userEmailOrId: string 
       <section style={{ minWidth: 0 }}>
         <Routes>
           <Route index element={<AdminHome role={props.role} />} />
-          <Route path="schedule" element={<AdminSchedule />} />
+          <Route path="schedule" element={<AdminSchedule role={props.role} />} />
           <Route path="clients" element={<AdminClients role={props.role} />} />
           <Route path="notes" element={<AdminNotes role={props.role} />} />
 
+          {/* Clinician (admin + therapist) */}
+          <Route path="assessments" element={<AdminAssessments role={props.role} />} />
+          <Route path="insurance" element={<AdminInsurance role={props.role} />} />
+          <Route path="forms" element={<AdminForms role={props.role} />} />
+
           {/* Admin-only */}
-          <Route
-            path="assessments"
-            element={props.role === "admin" ? <AdminAssessments /> : <Navigate to="/app" replace />}
-          />
-          <Route
-            path="insurance"
-            element={props.role === "admin" ? <AdminInsurance /> : <Navigate to="/app" replace />}
-          />
-          <Route
-            path="forms"
-            element={props.role === "admin" ? <AdminForms /> : <Navigate to="/app" replace />}
-          />
           <Route
             path="therapists"
             element={props.role === "admin" ? <AdminTherapists /> : <Navigate to="/app" replace />}
+          />
+          <Route
+            path="facilities"
+            element={props.role === "admin" ? <AdminFacilities /> : <Navigate to="/app" replace />}
           />
 
           {/* Fallback */}

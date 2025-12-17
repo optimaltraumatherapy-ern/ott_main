@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { formatDateTime } from "../../lib/time";
 
@@ -12,56 +12,86 @@ type FormSubmission = {
   responses: Record<string, any>;
 };
 
-export function AdminForms() {
+type MyClientRow = { client_id: string; display_name: string | null; full_name?: string | null; email?: string | null };
+
+export function AdminForms(props: { role: "admin" | "therapist" }) {
   const [status, setStatus] = useState<string | null>(null);
   const [rows, setRows] = useState<FormSubmission[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const [myClientIds, setMyClientIds] = useState<string[]>([]);
 
   const [filterClient, setFilterClient] = useState("");
   const [filterTemplate, setFilterTemplate] = useState("");
 
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
+  useEffect(() => {
+    if (props.role !== "therapist") return;
+
+    (async () => {
+      const { data, error } = await supabase.rpc("list_my_clients");
+      if (error) {
+        setStatus(error.message);
+        setMyClientIds([]);
+        return;
+      }
+      const mine = (data as MyClientRow[]) ?? [];
+      setMyClientIds(mine.map((m) => m.client_id));
+    })();
+  }, [props.role]);
+
   async function load() {
     setStatus(null);
     setLoading(true);
 
-    const { data, error } = await supabase
-      .from("form_submissions")
-      .select("id,client_id,template_key,status,submitted_at,created_at,responses")
-      .order("created_at", { ascending: false })
-      .limit(250);
+    try {
+      let q = supabase
+        .from("form_submissions")
+        .select("id,client_id,template_key,status,submitted_at,created_at,responses")
+        .order("created_at", { ascending: false })
+        .limit(250);
 
-    if (error) {
-      setStatus(error.message);
+      if (props.role === "therapist") {
+        if (!myClientIds.length) {
+          setRows([]);
+          setLoading(false);
+          return;
+        }
+        q = q.in("client_id", myClientIds);
+      }
+
+      const { data, error } = await q;
+      if (error) throw error;
+
+      setRows((data as FormSubmission[]) ?? []);
+    } catch (e: any) {
+      setStatus(e?.message ?? "Failed to load form submissions");
       setRows([]);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    setRows((data as FormSubmission[]) ?? []);
-    setLoading(false);
   }
 
   useEffect(() => {
     load();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.role, myClientIds.join(",")]);
 
   function toggleExpanded(id: string) {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
   }
 
-  const filtered = rows.filter((r) => {
-    const okClient =
-      !filterClient.trim() ||
-      r.client_id.toLowerCase().includes(filterClient.trim().toLowerCase());
+  const filtered = useMemo(() => {
+    const c = filterClient.trim().toLowerCase();
+    const t = filterTemplate.trim().toLowerCase();
 
-    const okTemplate =
-      !filterTemplate.trim() ||
-      r.template_key.toLowerCase().includes(filterTemplate.trim().toLowerCase());
-
-    return okClient && okTemplate;
-  });
+    return rows.filter((r) => {
+      const okClient = !c || r.client_id.toLowerCase().includes(c);
+      const okTemplate = !t || r.template_key.toLowerCase().includes(t);
+      return okClient && okTemplate;
+    });
+  }, [rows, filterClient, filterTemplate]);
 
   return (
     <div className="card">
@@ -70,7 +100,8 @@ export function AdminForms() {
           <h3 style={{ marginTop: 0, marginBottom: 0 }}>Submitted Forms</h3>
           <p className="muted" style={{ marginTop: 6 }}>
             <small>
-              Admin view of <code>form_submissions</code> (responses stored as JSON).
+              {props.role === "admin" ? "Admin view" : "Therapist view (assigned clients only)"} of{" "}
+              <code>form_submissions</code> (responses stored as JSON).
             </small>
           </p>
         </div>
@@ -108,7 +139,7 @@ export function AdminForms() {
           <input
             value={filterTemplate}
             onChange={(e) => setFilterTemplate(e.target.value)}
-            placeholder="assessment_v1…"
+            placeholder="intake_v1…"
             style={{ width: "100%" }}
           />
         </div>
@@ -141,10 +172,7 @@ export function AdminForms() {
                   <small>
                     client: <code>{r.client_id}</code>
                     {r.submitted_at ? (
-                      <>
-                        {" "}
-                        · submitted: <span>{formatDateTime(r.submitted_at)}</span>
-                      </>
+                      <> · submitted: <span>{formatDateTime(r.submitted_at)}</span></>
                     ) : (
                       <> · submitted: —</>
                     )}

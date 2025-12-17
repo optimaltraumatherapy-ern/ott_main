@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { formatDateTime } from "../../lib/time";
 
@@ -13,35 +13,79 @@ type InsuranceDoc = {
   created_at: string;
 };
 
-export function AdminInsurance() {
+type MyClientRow = { client_id: string; display_name: string | null; full_name?: string | null; email?: string | null };
+
+export function AdminInsurance(props: { role: "admin" | "therapist" }) {
   const [status, setStatus] = useState<string | null>(null);
   const [rows, setRows] = useState<InsuranceDoc[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const [myClientIds, setMyClientIds] = useState<string[]>([]);
+  const [clientLabelMap, setClientLabelMap] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (props.role !== "therapist") return;
+
+    (async () => {
+      const { data, error } = await supabase.rpc("list_my_clients");
+      if (error) {
+        setStatus(error.message);
+        setMyClientIds([]);
+        setClientLabelMap({});
+        return;
+      }
+
+      const mine = (data as MyClientRow[]) ?? [];
+      setMyClientIds(mine.map((m) => m.client_id));
+
+      const map: Record<string, string> = {};
+      mine.forEach((m) => {
+        map[m.client_id] = m.display_name || m.full_name || m.email || m.client_id;
+      });
+      setClientLabelMap(map);
+    })();
+  }, [props.role]);
+
+  const labelForClient = useMemo(() => {
+    return (cid: string) => clientLabelMap[cid] || cid;
+  }, [clientLabelMap]);
 
   async function load() {
     setStatus(null);
     setLoading(true);
 
-    const { data, error } = await supabase
-      .from("insurance_documents")
-      .select("id,client_id,provider,member_id,group_number,front_path,back_path,created_at")
-      .order("created_at", { ascending: false })
-      .limit(200);
+    try {
+      let q = supabase
+        .from("insurance_documents")
+        .select("id,client_id,provider,member_id,group_number,front_path,back_path,created_at")
+        .order("created_at", { ascending: false })
+        .limit(200);
 
-    if (error) {
-      setStatus(error.message);
+      if (props.role === "therapist") {
+        if (!myClientIds.length) {
+          setRows([]);
+          setLoading(false);
+          return;
+        }
+        q = q.in("client_id", myClientIds);
+      }
+
+      const { data, error } = await q;
+      if (error) throw error;
+
+      setRows((data as InsuranceDoc[]) ?? []);
+    } catch (e: any) {
+      setStatus(e?.message ?? "Load failed");
       setRows([]);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    setRows((data as InsuranceDoc[]) ?? []);
-    setLoading(false);
   }
 
   useEffect(() => {
     load();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.role, myClientIds.join(",")]);
 
   async function openSigned(path: string | null) {
     setStatus(null);
@@ -75,8 +119,8 @@ export function AdminInsurance() {
           <h3 style={{ marginTop: 0, marginBottom: 0 }}>Insurance</h3>
           <p className="muted" style={{ marginTop: 6 }}>
             <small>
-              Admin view of <code>insurance_documents</code>. Files open via signed URL (bucket:{" "}
-              <code>client_uploads</code>).
+              {props.role === "admin" ? "Admin view" : "Therapist view (assigned clients only)"} of{" "}
+              <code>insurance_documents</code>. Files open via signed URL (bucket: <code>client_uploads</code>).
             </small>
           </p>
         </div>
@@ -109,7 +153,8 @@ export function AdminInsurance() {
 
               <div className="muted">
                 <small>
-                  client: <code>{r.client_id}</code> · uploaded: {formatDateTime(r.created_at)}
+                  client: <strong>{labelForClient(r.client_id)}</strong> · <code>{r.client_id}</code> · uploaded:{" "}
+                  {formatDateTime(r.created_at)}
                 </small>
               </div>
 
@@ -126,14 +171,6 @@ export function AdminInsurance() {
                 <button onClick={() => openSigned(r.back_path)} disabled={!r.back_path}>
                   Open back
                 </button>
-              </div>
-
-              <div className="muted" style={{ marginTop: 6 }}>
-                <small>
-                  front_path: <code>{r.front_path ?? "—"}</code>
-                  <br />
-                  back_path: <code>{r.back_path ?? "—"}</code>
-                </small>
               </div>
             </li>
           ))}
